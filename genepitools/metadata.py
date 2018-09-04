@@ -17,4 +17,5 @@ class SamplingSite(object):
     '''
 
     def __init__(self, attr):
-        '''hmmm I am not sure '''
+        for key in attr:
+            self.__dict__[key] = attr[key]
