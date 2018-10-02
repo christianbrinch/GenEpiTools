@@ -12,6 +12,7 @@ __maintainer__ = "Christian Brinch"
 __email__ = "cbri@gfood.dtu.dk"
 
 import numpy as np
+from scipy.special import factorial
 
 
 def gauss_func(xvar, mean, sigma, amp=1., offset=0.):
@@ -19,8 +20,21 @@ def gauss_func(xvar, mean, sigma, amp=1., offset=0.):
     return amp / np.sqrt(2.*np.pi*sigma**2) * np.exp(-pow(xvar-mean, 2)/(2*sigma**2)) + offset
 
 
-def sine_wave(time, amp, omega, phase, ang=True):
+def poisson(k, lamb):
+    ''' A Poisson distribution '''
+    return (lamb**k/factorial(k)) * np.exp(-lamb)
+
+
+def erlang(xvar, k, lamb):
+    ''' An Erlang distribution'''
+    return 1./factorial(k-1) * pow(lamb, k)*pow(xvar, k-1)*np.exp(-lamb*(xvar))
+
+
+def sine_wave(time, amp, omega, phase, offset=0.):
     ''' A standard sine wave function '''
-    if ang is False:
-        omega = 2.*np.pi*omega
-    return amp*np.sin(omega*time+phase)
+    return amp*np.sin(omega*time+phase)+offset
+
+
+def line(xvar, slope, intercept):
+    ''' A straight line '''
+    return xvar*slope+intercept
