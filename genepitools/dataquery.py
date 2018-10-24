@@ -12,14 +12,14 @@ __maintainer__ = "Christian Brinch"
 __email__ = "cbri@gfood.dtu.dk"
 
 import numpy as np
-from uncertainties.umath import *
 
 
 class DataQuery(object):
     ''' A class that a selection of data to be plottet '''
 
-    def __init__(self, data, metadata, first_day=np.datetime64('1970-01-01')):
+    def __init__(self, data, error, metadata, first_day=np.datetime64('1970-01-01')):
         self.data = data
+        self.error = error
         self.metadata = metadata
         self.first_day = first_day
         self.length = len(self.days())
@@ -29,9 +29,11 @@ class DataQuery(object):
         if not isinstance(values, list):
             values = values.split()
         if excl:
-            return DataQuery(self.data, self.metadata[~self.metadata[column].isin(values)],
+            return DataQuery(self.data, self.error,
+                             self.metadata[~self.metadata[column].isin(values)],
                              self.first_day)
-        return DataQuery(self.data, self.metadata[self.metadata[column].isin(values)],
+        return DataQuery(self.data, self.error,
+                         self.metadata[self.metadata[column].isin(values)],
                          self.first_day)
 
     def flag(self, gene, threshold, excl=True):
@@ -47,15 +49,25 @@ class DataQuery(object):
 
         return DataQuery(self.data, self.metadata, self.first_day)
 
-    def sum(self):
-        ''' Sum of the data columns '''
-        subset = self.data[self.metadata['Sample_ID']]
-        return [sum(subset[column]) for column in self.metadata['Sample_ID']]
-
     def gene(self, gene):
         ''' Return a single gene abundance '''
         subset = self.data[self.metadata['Sample_ID']]
         return subset.loc[gene]
+
+    def gene_err(self, gene):
+        ''' Return a single gene abundance error'''
+        subset = self.error[self.metadata['Sample_ID']]
+        return subset.loc[gene]
+
+    def shannon(self):
+        ''' Return the Shannon index
+            TODO: fix the ugly +1e-60
+        '''
+        subset = self.data[self.metadata['Sample_ID']]
+        subset.loc['shannon'] = 0.
+        for column in subset:
+            subset.loc['shannon'][column] = -(subset[column] * np.log(subset[column]+1e-60)).sum()
+        return subset.loc['shannon']
 
     def days(self):
         ''' Return a list days passed since the earliest date in data set '''

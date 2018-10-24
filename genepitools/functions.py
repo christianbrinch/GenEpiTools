@@ -17,7 +17,8 @@ from scipy.special import factorial
 
 def gauss_func(xvar, mean, sigma, amp=1., offset=0.):
     ''' A 1D Gaussian function '''
-    return amp / np.sqrt(2.*np.pi*sigma**2) * np.exp(-pow(xvar-mean, 2)/(2*sigma**2)) + offset
+    # return amp / np.sqrt(2.*np.pi*sigma**2) * np.exp(-pow(xvar-mean, 2)/(2*sigma**2)) + offset
+    return amp * np.exp(-pow(xvar-mean, 2)/(2*sigma**2)) + offset
 
 
 def poisson(k, lamb):
