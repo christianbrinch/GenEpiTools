@@ -65,11 +65,3 @@ def sum_amr_and_bac(counts, mappings):
     for index, _ in mappings.iterrows():
         counts.loc['bac'][index] = mappings.loc[index]['Bacteria']
     return counts
-
-
-def frac_counts(counts):
-    ''' Return fractional AMR counts (to be used for Shannon diversity index)
-    '''
-    for column in counts:
-        counts[column] = counts[column] / counts[column].sum()
-    return counts

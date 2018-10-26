@@ -12,6 +12,7 @@ __maintainer__ = "Christian Brinch"
 __email__ = "cbri@gfood.dtu.dk"
 
 import numpy as np
+import pandas as pd
 
 
 class DataQuery(object):
@@ -61,13 +62,15 @@ class DataQuery(object):
 
     def shannon(self):
         ''' Return the Shannon index
-            TODO: fix the ugly +1e-60
         '''
         subset = self.data[self.metadata['Sample_ID']]
-        subset.loc['shannon'] = 0.
+        shannon = pd.DataFrame(index=[], columns=['H'])
         for column in subset:
-            subset.loc['shannon'][column] = -(subset[column] * np.log(subset[column]+1e-60)).sum()
-        return subset.loc['shannon']
+            tmp = np.array([i for i in list(subset[column]) if i > 0.])
+            tmp = tmp/np.sum(tmp)
+            shannon.loc[column] = - np.sum(tmp*np.log(tmp))
+
+        return shannon['H']
 
     def days(self):
         ''' Return a list days passed since the earliest date in data set '''
