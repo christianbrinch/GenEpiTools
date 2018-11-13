@@ -13,6 +13,8 @@ __email__ = "cbri@gfood.dtu.dk"
 
 import numpy as np
 import pandas as pd
+import random as rd
+import scipy.stats as ss
 
 
 class DataQuery(object):
@@ -60,17 +62,40 @@ class DataQuery(object):
         subset = self.error[self.metadata['Sample_ID']]
         return subset.loc[gene]
 
-    def shannon(self):
-        ''' Return the Shannon index
+    def shannon(self, n_samples):
+        ''' Return the Shannon index. Downsample to 800 counts.
+            Todo: This can (and should) be done better. Also, sample N times
+            and average to get better fidelity.
         '''
         subset = self.data[self.metadata['Sample_ID']]
-        shannon = pd.DataFrame(index=[], columns=['H'])
-        for column in subset:
-            tmp = np.array([i for i in list(subset[column]) if i > 0.])
-            tmp = tmp/np.sum(tmp)
-            shannon.loc[column] = - np.sum(tmp*np.log(tmp))
+        shannon = pd.DataFrame(index=[], columns=['H', 'L'])
 
-        return shannon['H']
+        for column in subset:
+
+            p_matrix = ss.dirichlet.rvs(np.array(subset[column])+0.5, n_samples)
+            a_vector = np.mean(p_matrix, axis=0)
+            sample = np.random.choice(a_vector, size=1000)
+            s = -np.sum([np.log10(i)*i for i in sample])
+
+            shannon.loc[column] = (s, len(
+                np.array([i for i in list(subset[column]) if i > 0.])))
+            '''
+            reduc = np.array([i for i in list(subset[column]) if i > 0.])
+            reduc = reduc/np.sum(reduc)
+            tmp = np.zeros(len(reduc))
+            count = 0
+            while count < n_samples:
+                myint = rd.randint(0, len(reduc)-1)
+                if np.random.rand() < reduc[myint]:
+                    tmp[myint] += 1
+                    count += 1
+            tmp = [i for i in tmp if i > 0.]
+            tmp = tmp/np.sum(tmp)
+            '''
+
+            #shannon.loc[column] = (- np.sum(values*np.log(values)), 60)
+
+        return shannon['H'], shannon['L']
 
     def days(self):
         ''' Return a list days passed since the earliest date in data set '''

@@ -16,7 +16,7 @@ import pandas as pd
 import scipy.stats as ss
 
 
-def transform(dataframe, transformation, n_samples=1000):
+def transform(dataframe, transformation, n_samples=2000):
     ''' Wrapper function for alr/clr transformation of counts '''
     new_dataframe = pd.DataFrame(index=dataframe.index)
     new_errorframe = pd.DataFrame(index=dataframe.index)
@@ -39,7 +39,7 @@ def alr(data, n_samples):
         By convention, data is normalized by last entry in data
     '''
     p_matrix = ss.dirichlet.rvs(np.array(data)+0.5, n_samples)
-    a_matrix = [np.log(i/i[-1]) for i in p_matrix]
+    a_matrix = [np.log10(i/i[-1]) for i in p_matrix]
     values = [np.mean(i) for i in zip(*a_matrix)]
     errors = [np.std(i) for i in zip(*a_matrix)]
     return values, errors
@@ -50,7 +50,7 @@ def clr(data, n_samples):
         data is normalized by geometric mean
     '''
     p_matrix = ss.dirichlet.rvs(np.array(data)+0.5, n_samples)
-    c_matrix = [np.log(i) - np.mean(np.log(i)) for i in p_matrix]
+    c_matrix = [np.log10(i) - np.mean(np.log10(i)) for i in p_matrix]
     values = [np.mean(i) for i in zip(*c_matrix)]
     errors = [np.std(i) for i in zip(*c_matrix)]
     return values, errors
@@ -63,5 +63,7 @@ def sum_amr_and_bac(counts, mappings):
     counts = counts.agg(['sum'], axis=0)
     counts.loc['bac'] = 0.
     for index, _ in mappings.iterrows():
-        counts.loc['bac'][index] = mappings.loc[index]['Bacteria']
+        counts.loc['bac'][index] = (mappings.loc[index]['Bacteria'] +
+                                    mappings.loc[index]['Bacteria_draft'] +
+                                    mappings.loc[index]['HumanMicrobiome'])
     return counts
