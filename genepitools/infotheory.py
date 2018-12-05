@@ -26,7 +26,8 @@ def shannon(composition):
     h_idx = []
     for column in composition:
         h_idx.append(-np.sum([i*np.log10(i)
-                              for i in composition[column]/np.sum(composition[column])]))
+                              for i in composition[column]
+                              / np.sum(composition[column])]))
     return h_idx
 
 

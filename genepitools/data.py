@@ -12,7 +12,6 @@ __email__ = "cbri@gfood.dtu.dk"
 
 import numpy as np
 import scipy.optimize as so
-import genepitools.transforms as gtrans
 import genepitools.functions as gfunc
 
 
@@ -22,7 +21,7 @@ class DataSheet(object):
     def __init__(self, counts, mappings, metadata):
         self.glc_counts = self.correct_for_gene_length(counts)
         self.mappings = mappings
-        #self.mappings = self.correct_for_sequencing_depth(mappings)
+        # self.mappings = self.correct_for_sequencing_depth(mappings)
         self.metadata = metadata
         self.am_classes = self.aggregate_by_class(counts)
         self.firstday = min(metadata['Sampling_date'])
@@ -33,12 +32,14 @@ class DataSheet(object):
             in the sequencing depth.
             TODO: This should be applied to the count frames as well
         '''
-        dbase = ['ResFinder', 'Plasmid', 'HumanMicrobiome', 'Bacteria', 'Bacteria_draft']
-        for i in range(len(dbase)):
+        dbase = ['ResFinder', 'Plasmid', 'HumanMicrobiome', 'Bacteria',
+                 'Bacteria_draft']
+        for i, _ in enumerate(dbase):
             dat_x = np.log10(mappings.sum(axis=0))
             dat_y = np.log10(mappings.loc[dbase[i]])
             popt, _ = so.curve_fit(gfunc.line, dat_x, dat_y)
-            corr = (dat_y - (gfunc.line(dat_x, *popt)-(dat_x-np.mean(dat_x)+np.mean(dat_y))))
+            corr = (dat_y - (gfunc.line(dat_x, *popt)-(dat_x-np.mean(dat_x)
+                                                       + np.mean(dat_y))))
             mappings.loc[dbase[i]] = pow(10, corr)
 
         return mappings
@@ -59,8 +60,10 @@ class DataSheet(object):
     def days(self, subset=None):
         ''' Return a list days passed since the earliest date in data set '''
         if subset is None:
-            return list((self.metadata['Sampling_date']-self.firstday).dt.days+1)
-        return list((self.metadata['Sampling_date'].loc[subset]-self.firstday).dt.days+1)
+            return list((self.metadata['Sampling_date']-self.firstday).dt.days
+                        + 1)
+        return list((self.metadata['Sampling_date'].loc[subset]
+                     - self.firstday).dt.days + 1)
 
 
 class Filter(list):

@@ -17,7 +17,8 @@ from scipy.special import factorial
 
 def gauss_func(xvar, mean, sigma, amp=1., offset=0.):
     ''' A 1D Gaussian function '''
-    # return amp / np.sqrt(2.*np.pi*sigma**2) * np.exp(-pow(xvar-mean, 2)/(2*sigma**2)) + offset
+    # return amp / np.sqrt(2.*np.pi*sigma**2) * np.exp(-pow(xvar-mean, 2)
+    #    /(2*sigma**2)) + offset
     return amp * np.exp(-pow(xvar-mean, 2)/(2*sigma**2)) + offset
 
 
@@ -43,7 +44,8 @@ def line(xvar, slope, intercept):
 
 def sine_plus_line_wrapper(xvar, *opt):
     ''' A wrapper function for the sum of a sine and a line '''
-    return sine_wave(xvar, opt[0], opt[1], opt[2], opt[3])+line(xvar, opt[4], opt[5])
+    return sine_wave(xvar, opt[0], opt[1], opt[2], opt[3])+line(xvar, opt[4],
+                                                                opt[5])
 
 
 def powerlaw(xvar, scale, exp):

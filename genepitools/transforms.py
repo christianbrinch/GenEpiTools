@@ -25,9 +25,9 @@ def alr_clr(vector, kind):
 
 
 def transform(frame, normfields=None, bayesian=True, n_samples=1000):
-    ''' This function will perform a log-transform depending on the normalization.
-        If bayesian is true, bayesian sampling will be applied to predict the finite
-        probability for zero entries in frameself.
+    ''' This function will perform a log-transform depending on the
+        normalization. If bayesian is true, bayesian sampling will be applied
+        to predict the finite probability for zero entries in frameself.
     '''
     prob = frame.copy(deep=True)
     error = frame.copy(deep=True)
@@ -59,22 +59,24 @@ def transform(frame, normfields=None, bayesian=True, n_samples=1000):
 def geom_mean(composition, n_samples=1000):
     ''' Calculate the geometric mean of a composition '''
     for column in composition:
-        p_matrix = ss.dirichlet.rvs(np.array(composition[column])+0.5, n_samples)
+        p_matrix = ss.dirichlet.rvs(np.array(composition[column])+0.5,
+                                    n_samples)
         composition[column] = np.mean(p_matrix, axis=0)
 
     return [np.exp(np.mean(np.log(x))) for x in np.array(composition)]
 
 
-def totvar(composition, geom_mean):
+def totvar(composition, mean):
     ''' Calculate the total variation of a composition
         TODO: This is very slow at the moment. Try to optimize
     '''
-    totvar = 0.
+    variance = 0.
     dim = np.shape(composition)
     for vector in np.array(composition.T):
-        dist_a = np.sqrt(1./(2.*dim[0]) * np.sum([(np.log(vector[i]/vector[j]) -
-                                                   np.log(geom_mean[i]/geom_mean[j]))**2
-                                                  for i in range(dim[0])
-                                                  for j in range(dim[0])]))
-        totvar += 1./dim[1] * dist_a**2
-    return totvar
+        dist_a = np.sqrt(1./(2.*dim[0])
+                         * np.sum([(np.log(vector[i]/vector[j])
+                                    - np.log(mean[i]/mean[j]))**2
+                                   for i in range(dim[0])
+                                   for j in range(dim[0])]))
+        variance += 1./dim[1] * dist_a**2
+    return variance

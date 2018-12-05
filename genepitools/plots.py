@@ -23,13 +23,18 @@ def histogram(axis, data, color='black', density=True, bins=None):
     if bins is None:
         bin_width = 2.*ss.iqr(data)/pow(len(data), 1./3.)
         nbins = int(np.ceil((max(data)-min(data))/bin_width))
-        axis.hist(data, nbins, density=density, facecolor=color, alpha=0.3, label='')
-        entries, edges, _ = axis.hist(data, nbins, density=density, edgecolor='white',
-                                      facecolor='none', alpha=1.0, label='', lw=1.0)
+        axis.hist(data, nbins, density=density, facecolor=color, alpha=0.3,
+                  label='')
+        entries, edges, _ = axis.hist(data, nbins, density=density,
+                                      edgecolor='white',
+                                      facecolor='none', alpha=1.0, label='',
+                                      lw=1.0)
         return entries, 0.5*(edges[1:] + edges[:-1])
 
-    axis.hist(data, bins, density=density, facecolor=color, alpha=0.3, label='')
-    entries, edges, _ = axis.hist(data, bins, density=density, edgecolor='white', facecolor='none',
+    axis.hist(data, bins, density=density, facecolor=color, alpha=0.3,
+              label='')
+    entries, edges, _ = axis.hist(data, bins, density=density,
+                                  edgecolor='white', facecolor='none',
                                   alpha=1.0, lw=1.0, label='')
 
     return entries, 0.5*(edges[1:] + edges[:-1])
@@ -51,7 +56,8 @@ def errorbar(axis, xvar, yvar, yerr, color='grey', fmt='o'):
     ''' Plot errorbars '''
     _, caps, bars = axis.errorbar(xvar, yvar, yerr=yerr, fmt=fmt, color=color,
                                   alpha=0.7, capsize=4., capthick=2.0,
-                                  markersize=6., markeredgewidth=0.5, markeredgecolor='white')
+                                  markersize=6., markeredgewidth=0.5,
+                                  markeredgecolor='white')
     _ = [abar.set_alpha(0.6) for abar in bars]
     _ = [acap.set_alpha(0.6) for acap in caps]
 

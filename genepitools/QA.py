@@ -35,11 +35,13 @@ def validate(composition):
     print composition.columns
     for column in composition.columns:
         color = 'white'
-        if column in ['ResFinder', 'Bacteria', 'Bacteria_draft', 'HumanMicrobiome', 'Plasmid']:
+        if column in ['ResFinder', 'Bacteria', 'Bacteria_draft',
+                      'HumanMicrobiome', 'Plasmid']:
             color = 'faded green'
         if column in ['Unmapped']:
             color = 'black'
-        if column in ['Vertebrates_mammals', 'Vertebrates_other', 'Human', 'Mitochondrion']:
+        if column in ['Vertebrates_mammals', 'Vertebrates_other', 'Human',
+                      'Mitochondrion']:
             color = 'denim blue'
         if column in ['Invertebrates', 'Plant', 'Virus']:
             color = 'amber'
