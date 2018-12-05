@@ -47,4 +47,5 @@ def validate(composition):
             color = 'pale red'
         axis.loglog(xvar, composition[column].sort_values()[::-1],
                     c=sns.xkcd_rgb[color], lw=3, alpha=0.8)
-        axis.annotate(column, (9e-1, composition[column].sort_values()[-1]), ha='right')
+        axis.annotate(column, (9e-1, composition[column].sort_values()[-1]),
+                      ha='right', fontsize=7)

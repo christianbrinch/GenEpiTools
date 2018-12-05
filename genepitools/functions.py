@@ -44,3 +44,8 @@ def line(xvar, slope, intercept):
 def sine_plus_line_wrapper(xvar, *opt):
     ''' A wrapper function for the sum of a sine and a line '''
     return sine_wave(xvar, opt[0], opt[1], opt[2], opt[3])+line(xvar, opt[4], opt[5])
+
+
+def powerlaw(xvar, scale, exp):
+    ''' A generic powerlaw '''
+    return scale*pow(xvar, exp)

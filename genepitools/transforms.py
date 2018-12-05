@@ -12,58 +12,69 @@ __maintainer__ = "Christian Brinch"
 __email__ = "cbri@food.dtu.dk"
 
 import numpy as np
-import pandas as pd
 import scipy.stats as ss
 
 
-def transform(dataframe, transformation, n_samples=2000):
-    ''' Wrapper function for alr/clr transformation of counts '''
-    new_dataframe = pd.DataFrame(index=dataframe.index)
-    new_errorframe = pd.DataFrame(index=dataframe.index)
-    if transformation == 'alr':
-        for column in dataframe.columns:
-            new_dataframe[column], new_errorframe[column] = alr(list(dataframe[column]), n_samples)
-        new_dataframe.drop(new_dataframe.index[-1], inplace=True)
-        new_errorframe.drop(new_errorframe.index[-1], inplace=True)
-    elif transformation == 'clr':
-        for column in dataframe.columns:
-            new_dataframe[column], new_errorframe[column] = clr(list(dataframe[column]), n_samples)
+def alr_clr(vector, kind):
+    ''' Log-transform vector based on kind '''
+    if kind == 'alr':
+        return [np.log10(i/i[-1]) for i in vector]
+    elif kind == 'clr':
+        return [np.log10(i) - np.mean(np.log10(i)) for i in vector]
+    return None
+
+
+def transform(frame, normfields=None, bayesian=True, n_samples=1000):
+    ''' This function will perform a log-transform depending on the normalization.
+        If bayesian is true, bayesian sampling will be applied to predict the finite
+        probability for zero entries in frameself.
+    '''
+    prob = frame.copy(deep=True)
+    error = frame.copy(deep=True)
+    if normfields is not None:
+        prob.loc['norm'] = 0.
+        error.loc['norm'] = 0.
+        for column in normfields:
+            prob.loc['norm'][column] = np.sum(normfields[column])
+        kind = 'alr'
     else:
-        print "Unknown transformation type"
-        return None
-    return new_dataframe, new_errorframe
+        kind = 'clr'
+
+    for column in frame:
+        if bayesian is True:
+            p_matrix = ss.dirichlet.rvs(np.array(prob[column])+0.5, n_samples)
+        else:
+            p_matrix = [np.array(prob[column])]
+
+        c_matrix = alr_clr(p_matrix, kind)
+        prob[column] = [np.mean(i) for i in zip(*c_matrix)]
+        error[column] = [np.std(i) for i in zip(*c_matrix)]
+    if normfields is not None:
+        prob = prob.drop('norm')
+        error = error.drop('norm')
+
+    return prob, error
 
 
-def alr(data, n_samples):
-    ''' Additive log ratio transformation
-        By convention, data is normalized by last entry in data
+def geom_mean(composition, n_samples=1000):
+    ''' Calculate the geometric mean of a composition '''
+    for column in composition:
+        p_matrix = ss.dirichlet.rvs(np.array(composition[column])+0.5, n_samples)
+        composition[column] = np.mean(p_matrix, axis=0)
+
+    return [np.exp(np.mean(np.log(x))) for x in np.array(composition)]
+
+
+def totvar(composition, geom_mean):
+    ''' Calculate the total variation of a composition
+        TODO: This is very slow at the moment. Try to optimize
     '''
-    p_matrix = ss.dirichlet.rvs(np.array(data)+0.5, n_samples)
-    a_matrix = [np.log10(i/i[-1]) for i in p_matrix]
-    values = [np.mean(i) for i in zip(*a_matrix)]
-    errors = [np.std(i) for i in zip(*a_matrix)]
-    return values, errors
-
-
-def clr(data, n_samples):
-    ''' Centered log ratio transformation
-        data is normalized by geometric mean
-    '''
-    p_matrix = ss.dirichlet.rvs(np.array(data)+0.5, n_samples)
-    c_matrix = [np.log10(i) - np.mean(np.log10(i)) for i in p_matrix]
-    values = [np.mean(i) for i in zip(*c_matrix)]
-    errors = [np.std(i) for i in zip(*c_matrix)]
-    return values, errors
-
-
-def sum_amr_and_bac(counts, mappings):
-    ''' Return total AMR and total bacteria count
-        TODO: bacteria count is no good - use bacteria genes instead
-    '''
-    counts = counts.agg(['sum'], axis=0)
-    counts.loc['bac'] = 0.
-    for index, _ in mappings.iterrows():
-        counts.loc['bac'][index] = (mappings.loc[index]['Bacteria'] +
-                                    mappings.loc[index]['Bacteria_draft'] +
-                                    mappings.loc[index]['HumanMicrobiome'])
-    return counts
+    totvar = 0.
+    dim = np.shape(composition)
+    for vector in np.array(composition.T):
+        dist_a = np.sqrt(1./(2.*dim[0]) * np.sum([(np.log(vector[i]/vector[j]) -
+                                                   np.log(geom_mean[i]/geom_mean[j]))**2
+                                                  for i in range(dim[0])
+                                                  for j in range(dim[0])]))
+        totvar += 1./dim[1] * dist_a**2
+    return totvar
