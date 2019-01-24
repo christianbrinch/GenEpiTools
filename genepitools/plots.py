@@ -64,18 +64,18 @@ def errorbar(axis, xvar, yvar, yerr, color='grey', fmt='o'):
 
 def scatter_with_err_ellipse(axis, frame, loc, color='black', name=None):
     ''' Make scatter plot with covariance ellipse. Good for biplot '''
-    axis.scatter(-frame.loc[loc[0]],
+    axis.scatter(frame.loc[loc[0]],
                  frame.loc[loc[1]],
                  marker='.',
                  color=color,
-                 alpha=0.3,
+                 alpha=0.8,
                  s=30,
                  label=None)
-    cov = np.cov(-frame.loc[loc[0]],
+    cov = np.cov(frame.loc[loc[0]],
                  frame.loc[loc[1]])
     lambda_, angle = np.linalg.eig(cov)
     lambda_ = np.sqrt(lambda_)
-    ell = Ellipse(xy=(np.mean(-frame.loc[loc[0]]),
+    ell = Ellipse(xy=(np.mean(frame.loc[loc[0]]),
                       np.mean(frame.loc[loc[1]])),
                   width=lambda_[0]*1.*2,
                   height=lambda_[1]*1.*2,
@@ -85,7 +85,7 @@ def scatter_with_err_ellipse(axis, frame, loc, color='black', name=None):
                   fill=False,
                   lw=3)
     axis.add_artist(ell)
-    axis.scatter(np.mean(-frame.loc[loc[0]]),
+    axis.scatter(np.mean(frame.loc[loc[0]]),
                  np.mean(frame.loc[loc[1]]),
                  marker='x',
                  s=80,

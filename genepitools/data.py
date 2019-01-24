@@ -10,52 +10,45 @@ __version__ = "0.1"
 __maintainer__ = "Christian Brinch"
 __email__ = "cbri@gfood.dtu.dk"
 
-import numpy as np
-import scipy.optimize as so
-import genepitools.functions as gfunc
-
 
 class DataSheet(object):
     ''' A class that holds all dataframes and transformation methods '''
 
-    def __init__(self, counts, mappings, metadata):
-        self.glc_counts = self.correct_for_gene_length(counts)
+    def __init__(self, counts, refdata, mappings, metadata):
+        self.counts = counts
+        self.glc_counts = self.correct_for_gene_length(counts, refdata)
+        self.clusters = self.homology_reduce(counts, refdata)
+        self.am_classes = self.aggregate_by_class(counts, refdata)
         self.mappings = mappings
-        # self.mappings = self.correct_for_sequencing_depth(mappings)
         self.metadata = metadata
-        self.am_classes = self.aggregate_by_class(counts)
         self.firstday = min(metadata['Sampling_date'])
 
     @classmethod
-    def correct_for_sequencing_depth(cls, mappings):
-        ''' A method that corrects for the nonlinear response to variations
-            in the sequencing depth.
-            TODO: This should be applied to the count frames as well
-        '''
-        dbase = ['ResFinder', 'Plasmid', 'HumanMicrobiome', 'Bacteria',
-                 'Bacteria_draft']
-        for i, _ in enumerate(dbase):
-            dat_x = np.log10(mappings.sum(axis=0))
-            dat_y = np.log10(mappings.loc[dbase[i]])
-            popt, _ = so.curve_fit(gfunc.line, dat_x, dat_y)
-            corr = (dat_y - (gfunc.line(dat_x, *popt)-(dat_x-np.mean(dat_x)
-                                                       + np.mean(dat_y))))
-            mappings.loc[dbase[i]] = pow(10, corr)
-
-        return mappings
-
-    @classmethod
-    def correct_for_gene_length(cls, counts):
+    def correct_for_gene_length(cls, counts, refdata):
         ''' A method that corrects the counts for the gene length '''
-        tmp_df = counts.iloc[:, 1:].div(counts['GeneSize']/1000., axis=0)
-        return tmp_df.T.drop(['GeneSize']).T
+
+        tmp_df = counts.iloc[:, :].div(refdata['refLength']/1000., axis=0)
+
+        return tmp_df
 
     @classmethod
-    def aggregate_by_class(cls, counts):
+    def aggregate_by_class(cls, counts, refdata):
         ''' Aggregate genes by resistance to AM classes '''
-        tmp_df = counts.iloc[:, 1:].div(counts['GeneSize']/1000., axis=0)
-        tmp_df = tmp_df.join(counts['Description']).groupby('Description').sum()
-        return tmp_df.T.drop(['GeneSize']).T
+        tmp_df = cls.correct_for_gene_length(counts, refdata)
+        tmp_df = tmp_df.join(refdata['description']).groupby('description').sum()
+        tmp_df = tmp_df.assign(sum=tmp_df.sum(axis=1)).sort_values(
+            by='sum', ascending=False).iloc[:, :-1]
+        tmp_df = tmp_df[(tmp_df.T != 0).any()]
+        return tmp_df
+
+    @classmethod
+    def homology_reduce(cls, counts, refdata):
+        ''' Simple homology reduction based on the gene identifier '''
+        tmp_df = cls.correct_for_gene_length(counts, refdata)
+        tmp_df = tmp_df.join(refdata['RepresentativeSeqName']
+                             ).groupby('RepresentativeSeqName').sum()
+        tmp_df = tmp_df[(tmp_df.T != 0).any()]
+        return tmp_df
 
     def days(self, subset=None):
         ''' Return a list days passed since the earliest date in data set '''

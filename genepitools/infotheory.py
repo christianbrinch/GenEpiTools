@@ -11,6 +11,7 @@ __maintainer__ = "Christian Brinch"
 __email__ = "cbri@gfood.dtu.dk"
 
 import numpy as np
+import pandas as pd
 
 
 def richness(composition):
@@ -43,3 +44,39 @@ def chao(composition):
         else:
             s_chao1.append(s_obs + f_1*(f_1-1.)/2.)
     return s_chao1
+
+
+def rarefy(lmappings, lcounts):
+    ''' rarefy composition to lowest member
+        TODO: specify rarefaction level and discard samples below
+    '''
+
+    level = min(lmappings.loc['notPhiX'])
+
+    for dba in lmappings.T:
+        if dba != 'notPhiX':
+            lmappings.T[dba] = lmappings.T[dba].multiply(
+                level/lmappings.T['notPhiX']).astype(int)
+
+    for sample in lcounts:
+        if lmappings[sample].loc['notPhiX'] > level:
+            tmp = lcounts[sample].to_frame()
+
+            weighted_pop = [lcounts[sample].index[elem]
+                            for elem, cnt in enumerate(lcounts[sample]) for i in range(cnt)]
+
+            for repeats in range(3):
+                subset = np.random.choice(
+                    weighted_pop, size=lmappings[sample].loc['ResFinder'], replace=False)
+
+                subdict = dict(np.asarray(np.unique(subset, return_counts=True)).T)
+                new = pd.DataFrame.from_dict(subdict, orient='index', columns=['r'+str(repeats)])
+
+                tmp = tmp.merge(new, how='outer', left_index=True, right_index=True).fillna(0)
+
+            tmp = tmp.drop(labels=sample, axis=1)
+            tmp['median'] = tmp.median(axis=1, skipna=False).astype(int)
+
+            lcounts[sample] = tmp['r0'].astype(float)
+
+    return lmappings, lcounts
