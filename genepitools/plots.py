@@ -79,7 +79,7 @@ def scatter_with_err_ellipse(axis, frame, loc, color='black', name=None):
                       np.mean(frame.loc[loc[1]])),
                   width=lambda_[0]*1.*2,
                   height=lambda_[1]*1.*2,
-                  angle=np.rad2deg(np.arccos(angle[0, 0])),
+                  angle=np.rad2deg(np.arccos(-angle[0, 0])),
                   alpha=0.6,
                   edgecolor=color,
                   fill=False,

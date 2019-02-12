@@ -24,7 +24,7 @@ def alr_clr(vector, kind):
     return None
 
 
-def transform(frame, normfields=None, depth_corr=None, bayesian=True, n_samples=1000):
+def transform(frame, normfields=None, bayesian=True, n_samples=2000):
     ''' This function will perform a log-transform depending on the
         normalization. If bayesian is true, bayesian sampling will be applied
         to predict the finite probability for zero entries in frameself.
@@ -42,14 +42,8 @@ def transform(frame, normfields=None, depth_corr=None, bayesian=True, n_samples=
 
     for column in frame:
         if bayesian is True:
-            if depth_corr is not None:
-                corr = float(depth_corr[column])/np.max(depth_corr)
-                p_matrix = ss.dirichlet.rvs(
-                    # np.array(prob[column])+0.5*(pow(corr, 0.23)), n_samples)
-                    np.array(prob[column])+0.5, n_samples)
-            else:
-                p_matrix = ss.dirichlet.rvs(
-                    np.array(prob[column])+0.5, n_samples)
+            p_matrix = ss.dirichlet.rvs(
+                np.array(prob[column])+0.5, n_samples)
 
         else:
             p_matrix = [np.array(prob[column])]
@@ -64,7 +58,7 @@ def transform(frame, normfields=None, depth_corr=None, bayesian=True, n_samples=
     return prob, error
 
 
-def geom_mean(composition, n_samples=1000):
+def geom_mean(composition, n_samples=5000):
     ''' Calculate the geometric mean of a composition '''
     for column in composition:
         p_matrix = ss.dirichlet.rvs(np.array(composition[column])+0.5,
