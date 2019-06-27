@@ -13,6 +13,7 @@ __email__ = "cbri@food.dtu.dk"
 
 import random
 import numpy as np
+import pandas as pd
 import scipy.stats as ss
 from statsmodels.stats.multitest import multipletests
 
@@ -97,3 +98,12 @@ def comp_anova(data, subsets, nsamples, denom):
     diff_win = anova_within(clrsets, setlengths)
     diff_btw = anova_between(clrsets, setlengths)
     return median_all, diff_win, diff_btw, rab
+
+
+def anova_test():
+    ''' Test against the original ALDeX2 R implementation '''
+    data = pd.read_csv('selex.txt', index_col=0, encoding='utf-8', delim_whitespace=True)
+    data = data[:400]
+    subsets = [['1_ANS', '1_BNS', '1_CNS', '1_DNS', '2_ANS', '2_CNS', '2_DNS'],
+               ['1_AS', '1_BS', '1_CS', '1_DS', '2_AS', '2_CS', '2_DS']]
+    return comp_anova(data, subsets, 500, 'all')
