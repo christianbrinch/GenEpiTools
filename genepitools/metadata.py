@@ -9,7 +9,7 @@ __credits__ = ["Christian Brinch"]
 __license__ = "AFL 3.0"
 __version__ = "0.1"
 __maintainer__ = "Christian Brinch"
-__email__ = "cbri@gfood.dtu.dk"
+__email__ = "cbri@food.dtu.dk"
 
 
 class SamplingSite(object):

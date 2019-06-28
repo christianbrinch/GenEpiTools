@@ -139,7 +139,7 @@ def biplot(axis, samples, features, eig_val, plot_samples=True):
                       fontsize=14)
 
 
-def ma_plot(axis, median_all, diff_btw, rab, p_cutoff=0.003):
+def ma_plot(axis, median_all, diff_btw, rab, data, p_cutoff=0.003):
     ''' MA plot for differential abundance analysis '''
     axis.scatter(median_all, diff_btw, color='black', marker='.')
     subset = np.where(rab < p_cutoff)
@@ -151,12 +151,12 @@ def ma_plot(axis, median_all, diff_btw, rab, p_cutoff=0.003):
     axis.plot([xmin, xmax], [-1, -1], color='grey', alpha=0.3)
     axis.fill_between([xmin, xmax], [-1, -1], [1, 1], color='grey', alpha=0.2)
 
-    axis.plot([0, 0], [plt.ylim()[0], plt.ylim()[1]], '--', color='grey', alpha=0.3)
-    axis.xlabel('Median log$_2$-ratio abundance')
-    axis.ylabel('Log$_2$ fold change')
+    axis.plot([0, 0], [axis.get_ylim()[0], axis.get_ylim()[1]], '--', color='grey', alpha=0.3)
+    axis.set_xlabel('Median log$_2$-ratio abundance')
+    axis.set_ylabel('Log$_2$ fold change')
 
     text = []
-    for i, txt in enumerate(np.array(data.index.values.tolist())[subset]):
-        label = data_org.refdata['description'].loc[txt]
-        text.append(plt.text(median_all[subset][i], diff_btw[subset][i], txt+' ('+label+')'))
+    for i, txt in enumerate(np.array(data.counts().index.values.tolist())[subset]):
+        label = data.refdata['description'].loc[txt]
+        text.append(axis.text(median_all[subset][i], diff_btw[subset][i], txt+' ('+label+')'))
     adjust_text(text, only_move={'points': 'y', 'text': 'y'})

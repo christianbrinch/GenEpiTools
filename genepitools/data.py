@@ -9,7 +9,7 @@ __credits__ = ["Christian Brinch"]
 __license__ = "AFL 3.0"
 __version__ = "0.2"
 __maintainer__ = "Christian Brinch"
-__email__ = "cbri@gfood.dtu.dk"
+__email__ = "cbri@food.dtu.dk"
 
 import pandas as pd
 import numpy as np
@@ -112,9 +112,9 @@ class TransAccessor(object):
                 p_matrix = [self._obj[column]]
 
             if kind == 'clr':
-                c_matrix = [np.log10(i) - np.mean(np.log10(i)) for i in p_matrix]
+                c_matrix = [np.log2(i) - np.mean(np.log2(i)) for i in p_matrix]
             else:
-                c_matrix = [np.log10(i/i[row]) for i in p_matrix]
+                c_matrix = [np.log2(i/i[row]) for i in p_matrix]
             self._obj[column] = [np.mean(i) for i in zip(*c_matrix)]
             error[column] = [np.std(i) for i in zip(*c_matrix)]
 
@@ -135,22 +135,34 @@ class TransAccessor(object):
 
             self._obj[column] = np.mean(p_matrix, axis=0)
 
-        return [np.exp(np.mean(np.log(x))) for x in np.array(self._obj)]
+        return [np.exp(np.mean(np.log2(x))) for x in np.array(self._obj)]
 
-    def totvar(self, mean):
+    def zero_estimate(self, n_samples=5000):
+        ''' Estimate zero values using  Dirichlet-multinomial Bayesian inherence '''
+        for column in self._obj:
+            p_matrix = ss.dirichlet.rvs(self._obj[column]+0.5, n_samples)
+            self._obj[column] = np.mean(p_matrix, axis=0)
+        return self._obj
+
+    def totvar(self):
         ''' Calculate the total variation of a composition
             TODO: This is very slow at the moment. Try to optimize
         '''
-        variance = 0.
-        dim = np.shape(self._obj)
-        for vector in np.array(self._obj.T):
-            dist_a = np.sqrt(1./(2.*dim[0])
-                             * np.sum([(np.log(vector[i]/vector[j])
-                                        - np.log(mean[i]/mean[j]))**2
-                                       for i in range(dim[0])
-                                       for j in range(dim[0])]))
-            variance += 1./dim[1] * dist_a**2
-        return variance
+        T = np.array([[np.var(np.log2(self._obj[self._obj.columns[i]] / self._obj[self._obj.columns[j]]))
+                       for j in range(self._obj.shape[1])] for i in range(self._obj.shape[1])])
+
+        totvar = 1./(np.sum(np.shape(T))-2) * np.sum(T)
+
+        #variance = 0.
+        #dim = np.shape(self._obj)
+        # for vector in np.array(self._obj.T):
+        #    dist_a = np.sqrt(1./(2.*dim[0])
+        #                     * np.sum([(np.log(vector[i]/vector[j])
+        #                                - np.log(mean[i]/mean[j]))**2
+        #                               for i in range(dim[0])
+        #                               for j in range(dim[0])]))
+        #    variance += 1./dim[1] * dist_a**2
+        return totvar
 
 
 class DataSheet(object):
@@ -191,6 +203,14 @@ class DataSheet(object):
         return list((self.metadata.loc['Sampling_date'].loc[subset]
                      - min(self.metadata.loc['Sampling_date'])).dt.days + 1)
 
+    def storage(self, subset=None):
+        ''' Return a list of days between sampling and extraction '''
+        if subset is None:
+            return list((self.metadata.loc['Extraction_date'] -
+                         self.metadata.loc['Sampling_date']).dt.days)
+        return list((self.metadata.loc['Extraction_date'].loc[subset]
+                     - self.metadata.loc['Sampling_date']).dt.days)
+
 
 class Filter(list):
     ''' A list class extension containing a subset of sample metadata '''
@@ -203,6 +223,10 @@ class Filter(list):
     def days(self):
         ''' A wrapper method for outputting days '''
         return self.data.days(self)
+
+    def storage(self):
+        ''' A wrapper method for outputting storage time '''
+        return self.data.storage(self)
 
     def isin(self, field, values):
         ''' Select samples where value is in field '''

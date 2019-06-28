@@ -89,6 +89,7 @@ def anova_between(clrsets, setlengths):
 
 def comp_anova(data, subsets, nsamples, denom):
     ''' CLR-transform, T-test, and variation calculations '''
+    data = data[subsets[0]+subsets[1]]
     features = anova_denom(data, denom)
     clr = anova_clr(data, nsamples, features)
     rab, median_all = anova_ttest(clr, subsets, nsamples)

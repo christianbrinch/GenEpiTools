@@ -20,7 +20,7 @@ import matplotlib.pyplot as plt
 import genepitools.functions as gfunc
 import genepitools.plots as gplots
 
-sns.set()
+# sns.set()
 
 
 def validate(composition):
@@ -90,9 +90,9 @@ def residuals(composition, color='grey', norm=7.0, overplot=False):
         axis[1].set_xlabel('Log(Total reads)')
         axis[1].set_ylabel('Log(Reads)')
 
-        dat_x = np.log10(composition.loc['notPhiX'])
+        dat_x = np.log10(composition.sum())  # loc['notPhiX'])
         if f == 0:
-            dat_y = np.log10(composition.loc['Bacteria']+composition.loc['Bacteria_draft'])
+            dat_y = np.log10(composition.loc['Bacteria_agg'])  # +composition.loc['Bacteria_draft'])
         else:
             dat_y = np.log10(composition.loc[dbase[f]])
         mean_x = np.mean(dat_x)
